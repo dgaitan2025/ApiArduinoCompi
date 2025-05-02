@@ -24,4 +24,5 @@ dependencies {
 
 bootWar {
     archiveFileName = 'ROOT.war'
+ archiveFileName = 'apiarduino.jar'
 }
