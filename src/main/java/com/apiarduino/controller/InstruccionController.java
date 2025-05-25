@@ -28,7 +28,7 @@ public String cargarDesdeTexto(@RequestBody String texto) {
     UserOnline = true;
     instrucciones.clear();
 
-    texto = texto.replaceAll("\\s+", ""); // limpia espacios
+   // texto = texto.replaceAll("\\s+", ""); // limpia espacios
 
     Pattern bloquePattern = Pattern.compile("([^;]+);");
     Matcher bloqueMatcher = bloquePattern.matcher(texto);
