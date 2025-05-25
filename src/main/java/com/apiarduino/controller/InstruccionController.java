@@ -28,27 +28,33 @@ public String cargarDesdeTexto(@RequestBody String texto) {
     UserOnline = true;
     instrucciones.clear();
 
-   // texto = texto.replaceAll("\\s+", ""); // limpia espacios
+    // Limpieza básica
+    String[] lineas = texto.split("\\r?\\n");
+    StringBuilder sb = new StringBuilder();
+    for (String linea : lineas) {
+        linea = linea.trim();
+        if (linea.isEmpty()) continue;
+        if (linea.startsWith("//")) continue;
+        if (linea.toUpperCase().startsWith("PROGRAM")) continue;
+        if (linea.equalsIgnoreCase("BEGIN") || linea.equalsIgnoreCase("END")) continue;
+        sb.append(linea);
+    }
 
-    Pattern bloquePattern = Pattern.compile("([^;]+);");
-    Matcher bloqueMatcher = bloquePattern.matcher(texto);
+    String limpio = sb.toString().replaceAll("\\s+", "");
 
-    Pattern instruccionPattern = Pattern.compile("([a-zA-Z_]+)\\((-?\\d+)\\)");
+    // Nuevo patrón
+    Pattern pattern = Pattern.compile("(girar\\([^\\)]+\\)(?:\\+[^;]+)*);|([a-zA-Z_]+)\\((-?\\d+)\\);");
+    Matcher matcher = pattern.matcher(limpio);
 
-    while (bloqueMatcher.find()) {
-        String bloque = bloqueMatcher.group(1);
-
-        if (bloque.contains("girar(")) {
-            // Guarda el bloque completo como una instrucción compuesta
-            instrucciones.add(new Instruccion(bloque, 0));
+    while (matcher.find()) {
+        if (matcher.group(1) != null) {
+            // Es un bloque girar(...) + ...
+            instrucciones.add(new Instruccion(matcher.group(1), 0));
         } else {
-            // Extrae instrucciones individuales
-            Matcher matcher = instruccionPattern.matcher(bloque);
-            while (matcher.find()) {
-                String accion = matcher.group(1);
-                int parametro = Integer.parseInt(matcher.group(2));
-                instrucciones.add(new Instruccion(accion, parametro));
-            }
+            // Es una instrucción individual
+            String accion = matcher.group(2);
+            int parametro = Integer.parseInt(matcher.group(3));
+            instrucciones.add(new Instruccion(accion, parametro));
         }
     }
 
