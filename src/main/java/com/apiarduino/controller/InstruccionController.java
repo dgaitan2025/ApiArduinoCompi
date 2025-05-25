@@ -28,33 +28,33 @@ public String cargarDesdeTexto(@RequestBody String texto) {
     UserOnline = true;
     instrucciones.clear();
 
-    texto = texto.replaceAll("\\s+", ""); // elimina espacios y saltos
+    texto = texto.replaceAll("\\s+", ""); // limpia espacios
 
-    // Dividir en bloques por punto y coma
-    String[] bloques = texto.split(";");
+    Pattern bloquePattern = Pattern.compile("([^;]+);");
+    Matcher bloqueMatcher = bloquePattern.matcher(texto);
 
-    Pattern pattern = Pattern.compile("([a-zA-Z_]+)\\((-?\\d+)\\)");
+    Pattern instruccionPattern = Pattern.compile("([a-zA-Z_]+)\\((-?\\d+)\\)");
 
-    for (String bloque : bloques) {
-        if (bloque.isEmpty()) continue;
+    while (bloqueMatcher.find()) {
+        String bloque = bloqueMatcher.group(1);
 
-        // Si contiene girar, guardar el bloque entero como una sola instrucción
-        if (bloque.contains("girar")) {
+        if (bloque.contains("girar(")) {
+            // Guarda el bloque completo como una instrucción compuesta
             instrucciones.add(new Instruccion(bloque, 0));
-            continue;
-        }
-
-        // Procesar instrucciones normales
-        Matcher matcher = pattern.matcher(bloque);
-        while (matcher.find()) {
-            String accion = matcher.group(1);
-            int parametro = Integer.parseInt(matcher.group(2));
-            instrucciones.add(new Instruccion(accion, parametro));
+        } else {
+            // Extrae instrucciones individuales
+            Matcher matcher = instruccionPattern.matcher(bloque);
+            while (matcher.find()) {
+                String accion = matcher.group(1);
+                int parametro = Integer.parseInt(matcher.group(2));
+                instrucciones.add(new Instruccion(accion, parametro));
+            }
         }
     }
 
     return "✅ Instrucciones cargadas: " + instrucciones.size();
 }
+
 
 
     // ✅ Arduino solicita instrucciones — esto activa el bloqueo
