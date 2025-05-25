@@ -18,25 +18,44 @@ public class InstruccionController {
     private boolean UserOnline = false;
 
     // ✅ SOLO permite cargar si no hay ejecución en curso
-    @PostMapping("/cargar")
-    public String cargarDesdeTexto(@RequestBody String texto) {
-        if (UserOnline) {
-            return "instrucciones pendientes por procesar. Intente más tarde.";
+
+@PostMapping("/cargar")
+public String cargarDesdeTexto(@RequestBody String texto) {
+    if (UserOnline) {
+        return "instrucciones pendientes por procesar. Intente más tarde.";
+    }
+
+    UserOnline = true;
+    instrucciones.clear();
+
+    texto = texto.replaceAll("\\s+", ""); // elimina espacios y saltos
+
+    // Dividir en bloques por punto y coma
+    String[] bloques = texto.split(";");
+
+    Pattern pattern = Pattern.compile("([a-zA-Z_]+)\\((-?\\d+)\\)");
+
+    for (String bloque : bloques) {
+        if (bloque.isEmpty()) continue;
+
+        // Si contiene girar, guardar el bloque entero como una sola instrucción
+        if (bloque.contains("girar")) {
+            instrucciones.add(new Instruccion(bloque, 0));
+            continue;
         }
-        UserOnline = true;
-        instrucciones.clear();
 
-        Pattern pattern = Pattern.compile("([a-zA-Z_]+)\\((-?\\d+)\\);");
-        Matcher matcher = pattern.matcher(texto);
-
+        // Procesar instrucciones normales
+        Matcher matcher = pattern.matcher(bloque);
         while (matcher.find()) {
             String accion = matcher.group(1);
             int parametro = Integer.parseInt(matcher.group(2));
             instrucciones.add(new Instruccion(accion, parametro));
         }
-
-        return "✅ Instrucciones cargadas: " + instrucciones.size();
     }
+
+    return "✅ Instrucciones cargadas: " + instrucciones.size();
+}
+
 
     // ✅ Arduino solicita instrucciones — esto activa el bloqueo
     @GetMapping
